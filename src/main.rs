@@ -1,5 +1,4 @@
 extern crate libnotify;
-use std::process::exit;
 mod lib;
 use lib::Config;
 use std::thread;
@@ -69,6 +68,7 @@ fn main() {
             cycle_len = String::from("endless");
         }
         
+        // work
         let n = libnotify::Notification::new(
                     &format_args_f!("Starting {conf.on_len} minute session #{i}, out of {cycle_len} total cycles")
                             .to_string(),
@@ -77,22 +77,31 @@ fn main() {
         n.show().unwrap();
         thread::sleep(std::time::Duration::from_secs(conf.on_len * 60));
 
-        let n = libnotify::Notification::new(
-                    &format_args_f!("Finished. Take a break for {conf.break_len} minutes")
-                            .to_string(),
-                        Some(""),
-                        None);
-        n.show().unwrap();
-
+        // break
         let long_break = i % conf.long_break_freq == 0;
+
+        // code duplication for the notifs isn't ideal but its the easiest way to do it with 
+        // Rust scoping that I'm aware of
         if long_break {
+            let n = libnotify::Notification::new(
+                &format_args_f!("Finished. Take a break for {conf.long_break_len} minutes")
+                        .to_string(),
+                    Some(""),
+                    None);
+                    n.show().unwrap();
             thread::sleep(std::time::Duration::from_secs(conf.long_break_len * 60));
         }
         else {
+            let n = libnotify::Notification::new(
+                &format_args_f!("Finished. Take a break for {conf.break_len} minutes")
+                        .to_string(),
+                    Some(""),
+                    None);
+                    n.show().unwrap();
             thread::sleep(std::time::Duration::from_secs(conf.break_len * 60));
         }
 
-        
+
     }
  
 }

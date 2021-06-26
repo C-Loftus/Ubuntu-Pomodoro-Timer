@@ -1,4 +1,4 @@
-use clap::{App, Arg, ArgMatches};
+use clap::ArgMatches;
 
 
 pub struct Config {
