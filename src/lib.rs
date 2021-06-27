@@ -1,4 +1,4 @@
-use clap::ArgMatches;
+use clap::{Arg, App, ArgMatches};
 
 
 pub struct Config {
@@ -9,6 +9,39 @@ pub struct Config {
     pub long_break_len: u64,
 }
 
+
+pub fn gen_args() -> clap::ArgMatches<'static> {
+    App::new("Pomodoro")
+    .version("0.1.0")
+    .author("C-Loftus")
+    .about("Pomodoro")
+    .arg(Arg::with_name("break time")
+             .short("b")
+             .long("breakt")
+             .takes_value(true)
+             .help("How long for your standard short breaks"))
+    .arg(Arg::with_name("work time")
+            .short("w")
+            .long("workt")
+            .takes_value(true)
+            .help("How long to work"))
+    .arg(Arg::with_name("cycles")
+             .short("c")
+             .long("cycles")
+             .takes_value(true)
+             .help("How many work/break cycles"))
+    .arg(Arg::with_name("long break frequency")
+             .short("f")
+             .long("longfreq")
+             .takes_value(true)
+             .help("Generate a longer break after n cycles"))
+    .arg(Arg::with_name("long break length")
+             .short("l")
+             .long("lbreakt")
+             .takes_value(true)
+             .help("The length of your long break"))
+    .get_matches()
+}
 
 impl Config {
     pub fn new()-> Config{
