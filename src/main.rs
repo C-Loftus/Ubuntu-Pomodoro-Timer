@@ -5,6 +5,9 @@ use std::thread;
 use clap::{Arg, App};
 extern crate fstrings;
 use fstrings::format_args_f;
+use std::fs::File;
+use std::io::BufReader;
+use rodio::{Decoder, OutputStream, source::Source};
 
 fn main() {
     let mut conf: Config = Config::new();
@@ -15,6 +18,8 @@ fn main() {
 
     libnotify::init("Timer").unwrap();
 
+    let (_stream, stream_handle) = OutputStream::try_default().unwrap();
+    // Load a sound from a file, using a path relative to Cargo.toml
 
     let has_freq = matches.is_present("long break frequency");
     let has_len = matches.is_present("long break length");  
@@ -29,16 +34,22 @@ fn main() {
     else if has_freq && !has_len {
         // default of 15 min long break
         conf.long_break_len = 15;
+    }        
+    let mut cycle_len =  conf.cycles.to_string();         
+
+    if conf.cycles == u64::MAX {
+        cycle_len = String::from("endless");
     }
+    let n = libnotify::Notification::new(
+        &format_args_f!("{conf.on_len} min,{cycle_len} cycles,{conf.break_len} min brk,{conf.long_break_len} min lbrk: per {conf.long_break_freq} cycles")
+                .to_string(),
+            Some(""),
+            None);
+    n.show().unwrap();
+    thread::sleep(std::time::Duration::from_secs(2));
 
 
-    for i in 1..conf.cycles {
-        let mut cycle_len =  conf.cycles.to_string();         
-
-        if conf.cycles == u64::MAX {
-            cycle_len = String::from("endless");
-        }
-        
+    for i in 1..conf.cycles {        
         // work
         let n = libnotify::Notification::new(
                     &format_args_f!("Starting {conf.on_len} minute session #{i}, out of {cycle_len} total cycles")
@@ -48,14 +59,24 @@ fn main() {
         n.show().unwrap();
         thread::sleep(std::time::Duration::from_secs(conf.on_len * 60));
 
+
         // break
         let long_break = i % conf.long_break_freq == 0;
 
-        // code duplication for the notifs isn't ideal but its the easiest way to do it with 
-        // Rust scoping that I'm aware of
+            // AUDIO
+                // code duplication for the notifs isn't ideal but its the easiest way to do it with 
+                // Rust scoping that I'm aware of
+                let file = BufReader::new(File::open("mus.mp3").unwrap());
+                let source = Decoder::new(file).unwrap();
+                stream_handle.play_raw(source.convert_samples()).unwrap();
+
+                // The sound plays in a separate audio thread,
+                // so we need to keep the main thread alive while it's playing.
+                std::thread::sleep(std::time::Duration::from_secs(5));
+        
         if long_break {
             let n = libnotify::Notification::new(
-                &format_args_f!("Finished. Take a break for {conf.long_break_len} minutes")
+                &format_args_f!("Finished. Take a long break for {conf.long_break_len} minutes")
                         .to_string(),
                     Some(""),
                     None);
@@ -71,6 +92,17 @@ fn main() {
                     n.show().unwrap();
             thread::sleep(std::time::Duration::from_secs(conf.break_len * 60));
         }
+
+                 // AUDIO
+                // code duplication for the notifs isn't ideal but its the easiest way to do it with 
+                // Rust scoping that I'm aware of
+                let file = BufReader::new(File::open("mus.mp3").unwrap());
+                let source = Decoder::new(file).unwrap();
+                stream_handle.play_raw(source.convert_samples()).unwrap();
+
+                // The sound plays in a separate audio thread,
+                // so we need to keep the main thread alive while it's playing.
+                std::thread::sleep(std::time::Duration::from_secs(5));   
 
 
     }
