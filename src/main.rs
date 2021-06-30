@@ -15,7 +15,6 @@ fn main() {
     let matches = lib::gen_args();
 
     Config::parse_lens(&mut conf, &matches);
-
     libnotify::init("Timer").unwrap();
 
     let (_stream, stream_handle) = OutputStream::try_default().unwrap();
@@ -49,7 +48,8 @@ fn main() {
     thread::sleep(std::time::Duration::from_secs(2));
 
 
-    for i in 1..conf.cycles {        
+    for i in 1..conf.cycles {      
+        println!("starting {} minute cycle {}", conf.on_len, i);
         // work
         let n = libnotify::Notification::new(
                     &format_args_f!("Starting {conf.on_len} minute session #{i}, out of {cycle_len} total cycles")
@@ -73,7 +73,7 @@ fn main() {
                 // The sound plays in a separate audio thread,
                 // so we need to keep the main thread alive while it's playing.
                 std::thread::sleep(std::time::Duration::from_secs(5));
-        
+
         if long_break {
             let n = libnotify::Notification::new(
                 &format_args_f!("Finished. Take a long break for {conf.long_break_len} minutes")
@@ -81,15 +81,17 @@ fn main() {
                     Some(""),
                     None);
                     n.show().unwrap();
+                    println!("starting break {} for {} minutes", i, conf.long_break_len);
             thread::sleep(std::time::Duration::from_secs(conf.long_break_len * 60));
         }
         else {
             let n = libnotify::Notification::new(
-                &format_args_f!("Finished. Take a break for {conf.break_len} minutes")
+                &format_args_f!("Finished. Take break #{i} for {conf.break_len} minutes")
                         .to_string(),
                     Some(""),
                     None);
                     n.show().unwrap();
+                    println!("starting break {} for {} minutes", i, conf.break_len);
             thread::sleep(std::time::Duration::from_secs(conf.break_len * 60));
         }
 
@@ -110,3 +112,5 @@ fn main() {
 }
 
 
+// TODO:
+// Reduce duplicate code through Boxes /  rodio buffers
