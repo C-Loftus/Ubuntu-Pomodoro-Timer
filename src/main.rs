@@ -2,7 +2,6 @@ extern crate libnotify;
 mod lib;
 use lib::Config;
 use std::thread;
-use clap::{Arg, App};
 extern crate fstrings;
 use fstrings::format_args_f;
 use std::fs::File;
@@ -39,6 +38,7 @@ fn main() {
     if conf.cycles == u64::MAX {
         cycle_len = String::from("endless");
     }
+
     let n = libnotify::Notification::new(
         &format_args_f!("{conf.on_len} min,{cycle_len} cycles,{conf.break_len} min brk,{conf.long_break_len} min lbrk: per {conf.long_break_freq} cycles")
                 .to_string(),
