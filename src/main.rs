@@ -1,7 +1,7 @@
 extern crate libnotify;
 mod lib;
 use lib::Config;
-use std::thread;
+use std::{thread};
 extern crate fstrings;
 use fstrings::format_args_f;
 use std::fs::File;
@@ -9,10 +9,12 @@ use std::io::BufReader;
 use rodio::{Decoder, OutputStream, source::Source};
 
 fn main() {
+    let relative_path: &str = "Music/mus.mp3";
+    let mut sound =  dirs::home_dir().unwrap();
+    sound.push(relative_path);
+
     let mut conf: Config = Config::new();
-
     let matches = lib::gen_args();
-
     Config::parse_lens(&mut conf, &matches);
     libnotify::init("Timer").unwrap();
 
@@ -66,7 +68,7 @@ fn main() {
             // AUDIO
                 // code duplication for the notifs isn't ideal but its the easiest way to do it with 
                 // Rust scoping that I'm aware of
-                let file = BufReader::new(File::open("mus.mp3").unwrap());
+                let file = BufReader::new(File::open(&sound).unwrap());
                 let source = Decoder::new(file).unwrap();
                 stream_handle.play_raw(source.convert_samples()).unwrap();
 
@@ -98,7 +100,9 @@ fn main() {
                  // AUDIO
                 // code duplication for the notifs isn't ideal but its the easiest way to do it with 
                 // Rust scoping that I'm aware of
-                let file = BufReader::new(File::open("mus.mp3").unwrap());
+                
+
+                let file = BufReader::new(File::open(&sound).unwrap());
                 let source = Decoder::new(file).unwrap();
                 stream_handle.play_raw(source.convert_samples()).unwrap();
 
